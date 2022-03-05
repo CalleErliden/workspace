@@ -22,7 +22,7 @@ public class SudokuSolver implements ISudokuSolver {
 				}
 		}
 	}
-	/*@Override
+	@Override
 	public boolean solve() {
 		
 		return solveBoard();
@@ -48,63 +48,8 @@ public class SudokuSolver implements ISudokuSolver {
 			}
 		}
 		return true;
-	}*/
-	@Override
-	public boolean solve() {
-		return solve(0, 0);
 	}
-	private boolean solve(int row, int col) {
-
-		int dim = this.getDimension();
-
-		// 
-		if (row == dim) {
-			return true;
-		}
-
 	
-		int newTow, newCol;
-
-		
-		if (col < dim - 1) {
-			
-			newCol = col + 1;
-			newTow = row;
-		} else {
-			
-			newCol = 0;
-			newTow = row + 1;
-		}
-
-	
-		if (this.board[row][col] == tom) {
-
-			// Loop through values [1, 2, ..., dim];
-			for (int i = 1; i < dim + 1; i++) {
-
-				// Check if value can be placed in board
-				if (this.checkValidPlacement(row, col, i)) {
-
-					// Place value to go to next one
-					this.board[row][col] = i;
-
-					// If next one also can be solved, return true
-					if (this.solve(newTow, newCol)) {
-						return true;
-					}
-
-					// Else, set it back to Empty
-					this.board[row][col] = tom;
-				}
-			}
-
-			return false;
-		}
-
-		// If value is set, return if its valid and the next one can be solved
-		return this.checkValidPlacement(row, col, this.board[row][col]) && this.solve(newTow, newCol);
-
-	}
 	@Override
 	public void add(int row, int col, int digit) {
 		checkArg(row,col,digit);
@@ -144,14 +89,14 @@ public class SudokuSolver implements ISudokuSolver {
 		checkArg(row, col,nbr);
 
 		
-		int v = board[row][col];
-		board[row][col] = tom; // tar bort värdet boxen som ska kollas så det inte kollar mot sig själv
+		//int v = board[row][col];
+	//	board[row][col] = tom; // tar bort värdet boxen som ska kollas så det inte kollar mot sig själv
 
 		// kollar på alla sätt 
-		boolean result = !checkRow(row, nbr) && !checkColumn(col, nbr) && !checkBox(row, col, nbr);
+		boolean result = !checkRow(row, col,nbr) && !checkColumn(col, row,nbr) && !checkBox(row, col, nbr);
 
 	
-		this.board[row][col] = v;
+		//this.board[row][col] = v;
 
 		return result;
 	}
@@ -162,9 +107,10 @@ public class SudokuSolver implements ISudokuSolver {
 		
 		
 		for(int i=localBoxRow;i<localBoxRow+3;i++) {
-				for(int j= localBoxCol; j<localBoxCol;j++) {
-					if(board[i][j] == nbr) {
-						return true; // returns true om det inte är är vaild tal då det blir snabbare
+				for(int j= localBoxCol; j<localBoxCol+3;j++) { // saknade +3 så fungerade inte korreckt
+					
+					if(board[i][j] == nbr  && ((i != row ) && (j !=col)) && board[i][j] !=0) {
+						return true; // returns true om det inte är är valid
 				}
 			
 			}
@@ -172,18 +118,18 @@ public class SudokuSolver implements ISudokuSolver {
 		return false;
 	}
 
-	private boolean checkColumn(int col, int nbr) {
+	private boolean checkColumn(int col,int row, int nbr) {
 		for(int i=0;i<getDimension();i++) {
-			if(board[i][col] == nbr) {
-				return true; // returns true om det inte är är vaild tal då det blir snabbare
+			if(board[i][col] == nbr && board[i][col]!=0 && row !=i) {
+				return true; // returns true om det inte är är valid tal 
 			}
 		}
 		return false;
 	}
 
-	private boolean checkRow(int row, int nbr) {
+	private boolean checkRow(int row, int col ,int nbr) {
 		for (int i =0; i<getDimension();i++) {
-			if(board[row][i]== nbr) {
+			if(board[row][i]== nbr && board[row][i] !=0 && col != i) {
 				return true; // returns true om det inte är är vaild tal då det blir snabbare
 			}
 		}

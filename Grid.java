@@ -3,6 +3,7 @@ package soduko;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.event.FocusEvent;
@@ -23,12 +24,13 @@ public class Grid {
 	private ISudokuSolver solver;
 	private int counter;
 	private JTextField[][] sMatrix;
+	private JPanel sPanel;
 	
 	public Grid(ISudokuSolver s) {
 		this.solver = s;
-		SwingUtilities.invokeLater(() -> createWindow("Sudoku", 400, 400));
 		int counter =0;
 		sMatrix= new JTextField[9][9];
+				SwingUtilities.invokeLater(() -> createWindow("Sudoku", 400, 400));
 	}
 	
 	private void createWindow(String Title, int height, int width) {
@@ -40,8 +42,10 @@ public class Grid {
 		
 		
 		//Gör en panel för sudokut.
-		JPanel sPanel = new JPanel();
+		sPanel = new JPanel();
+
 		sPanel.setLayout(new GridLayout(9,9));
+		
 		sPanel.setBackground(Color.BLACK);
 		sFrame.add(sPanel, BorderLayout.CENTER);
 		
@@ -49,12 +53,12 @@ public class Grid {
 		//Gör en panel för knapparna.
 		JPanel bPanel = new JPanel();
 		sFrame.add(bPanel, BorderLayout.SOUTH);
-		
+	
 		
 		//Gör en sudoku-matris som sedan fylls med JTextFields.
 		
 		
-		for(int r = 0; r < 9; r++) {
+	for(int r = 0; r < 9; r++) {
 			for (int c = 0; c < 9; c++) {
 				sMatrix[r][c] = new JTextField(1);
 				sMatrix[r][c].setHorizontalAlignment(JTextField.CENTER);
@@ -70,14 +74,48 @@ public class Grid {
 		setBoxColor(sMatrix);
 		
 		
-		//Lägger till en solve-knapp. Kolla solveButton-metoden.
+		//skapar knapparna
 		JButton solveButton = new JButton("Solve");
 		JButton clearButton = new JButton("Clear");
 		JButton  nyBtn = new JButton ("New Sudoku");
 		
 		Container pane = sFrame.getContentPane();
+		
+		
 		solveButton.addActionListener(event -> {
+			//Konvertera värden som skrivits till "board" 
+			int [][] values = new int[9][9];  // borde nog lägga allt detta i en metod 
+			for(int row = 0; row < 9; row++) {
+				for(int col = 0; col < 9; col++) {
+					if(sMatrix[row][col].getText().length() == 0) {
+						values[row][col] = 0;
+					} else {
+						try {
+						
+							//om siffran är för hög.
+							if(Integer.parseInt(sMatrix[row][col].getText()) > 9) {
+								JOptionPane.showMessageDialog(sFrame, "Enbart siffror 1-9 är tillåtna", "Error", JOptionPane.ERROR_MESSAGE);
+								sMatrix[row][col].requestFocus();
+								sMatrix[row][col].selectAll();
+								return;
+							}
+							values[row][col] = Integer.parseInt(sMatrix[row][col].getText());
+						} 
+					
+						//Om man t.ex. har skrivit in ord
+						catch (Exception w){
+							JOptionPane.showMessageDialog(sFrame, "Enbart siffror 1-9 är tillåtna", "Error", JOptionPane.ERROR_MESSAGE);
+							sMatrix[row][col].requestFocus();
+							sMatrix[row][col].selectAll();
+							return;
+							}
+						}
+					}
+				}
+				solver.setMatrix(values);
+			
 			if (solver.solve()) {
+				
 				this.rebuildBoard(9);
 				JOptionPane.showMessageDialog( pane,"The sudoku has been solved");
 			} else {
@@ -120,33 +158,42 @@ public class Grid {
 		for (int i =0; i<counter*9;i++) {
 			String line = scanner.nextLine();
 		}
-		int [][] sMatrix = new int [dim][dim];
+		int [][] newMatrix = new int [dim][dim];
 		for (int row=0; row<dim;row++) {
 			String line = scanner.nextLine();
 			Scanner lineScanner = new Scanner(line);
 			
 			for (int i = 0; i < 9 ; i++) {
-				sMatrix[row][i]= lineScanner.nextInt();
+				newMatrix[row][i]= lineScanner.nextInt();
 				}
 			
 		}
-		solver.setMatrix(sMatrix);
-		buildBoard( 9,false,false);
+		solver.setMatrix(newMatrix);
+		buildBoard( 9,false);
 		
 	}
 
 	private void clearBoard(int i) {
-		this.buildBoard(9, false, true);
+		this.buildBoard(9, true);
+	
 		
 	}
 
-	private void buildBoard(int dim, boolean initialBuild, boolean clear) {
+	private void buildBoard(int dim, boolean clear) {
+		String t;
+
+		// Catch-block catches both IllegalArgumentException from solver.setNumber
+		// as well as NumberFormatException from Integer.parseInt.
+		// If invalid, set the number back to 0.
+		
 		if (clear) {
 			this.solver.clear();
 		}
-
+		
+		//setBoxColor(sMatrix);
 		for (int r = 0; r < dim; r++) {
 			for (int c = 0; c < dim; c++) {
+	
 				int nbr = this.solver.get(r, c);
 				if(nbr!=0) {
 					sMatrix[r][c].setEditable(false);
@@ -154,91 +201,25 @@ public class Grid {
 					sMatrix[r][c].setEditable(true);
 				}
 				String val = nbr > 0 ? String.valueOf(nbr) : "";
-				JTextField field = new JTextField();
+				JTextField box = new JTextField();
 
-				// If first build, set attributes and add them to the panel
-			/*	if (initialBuild) {
-					this.setFieldAttributes(field, r, c, dim);
-					this.sPanel.add(field);
-					fields[r][c] = field;
-				}*/
-
+				
+				
+				
 				sMatrix[r][c].setText(val);
 			}
 		}
+		
 
 		
-	}
-
-	private void setFieldAttributes(JTextField field, int r, int c, int dim) {
-		Color bgColor = this.squareBackground((int) Math.sqrt(dim), r, c);
-
-		field.setBackground(bgColor);
-
-		field.setPreferredSize(new Dimension(400, 400));
-		field.setHorizontalAlignment(JTextField.CENTER);
-
-		field.addFocusListener(new FocusListener() {
-
-			// Set background on hover
-			@Override
-			public void focusGained(FocusEvent e) {
-				field.setBackground(SudokuColors.HOVER);
-
-			}
-			
-			// Set value and revert background on blur 
-			@Override
-			public void focusLost(FocusEvent e) {
-				field.setBackground(bgColor);
-
-				String t = field.getText();
-
-				// Catch-block catches both IllegalArgumentException from solver.setNumber
-				// as well as NumberFormatException from Integer.parseInt.
-				// If invalid, set the number back to 0.
-				try {
-					int nbr = Integer.parseInt(t);
-
-					// Simple way to set the number back to 0 and hide it from the view
-					if (nbr <= 0) {
-						throw new IllegalArgumentException();
-					}
-
-					solver.add(r, c, nbr);
-
-				} catch (Exception err) {
-					solver.add(r, c, 0);
-					field.setText("");
-				}
-
-			}
-
-		});
-		
-	}
-
-	private Color squareBackground(int size, int row, int col) {
-		int gridRow = (row / size) * size;
-		int gridCol = (col / size) * size;
-
-		if (gridRow % 2 == 0 && gridCol % 2 == 0 || (gridRow == size && gridCol == size)) {
-			return SudokuColors.ACCENT;
-		}
-
-		return Color.white;
 	}
 	
 
 	private void rebuildBoard(int dim) {
-		this.buildBoard(dim, false, false);
+		
+		this.buildBoard(dim, false);
 		
 	}
-
-	
-	
-	
-	
 	
 	//Ändrar färgen på rutnätet.
 	private void setBoxColor(JTextField[][] sMatrix) {

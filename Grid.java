@@ -32,7 +32,7 @@ public class Grid {
 		int counter =0;
 		sFrame = new JFrame("Sudoku");
 		sMatrix= new JTextField[9][9];
-		SwingUtilities.invokeLater(() -> createWindow("Sudoku", 400, 400));
+		SwingUtilities.invokeLater(() -> createWindow("Sudoku", 500,500));
 	}
 
 	private void createWindow(String Title, int height, int width) {
@@ -139,7 +139,7 @@ public class Grid {
 		bPanel.add(showSolutionButton,BorderLayout.WEST);
 
 		//Gör fönstret synbart och packar ihop det tätt.
-		sFrame.pack();
+		//sFrame.pack();
 		sFrame.setVisible(true);
 	}
 
@@ -158,6 +158,7 @@ public class Grid {
 						//Om siffran är för hög eller för låg.
 						if(Integer.parseInt(sMatrix[row][col].getText()) > 9 || Integer.parseInt(sMatrix[row][col].getText()) < 1) {
 							JOptionPane.showMessageDialog(sFrame, "Fel använd endast siffror mellan 1 och 9", "Error", JOptionPane.ERROR_MESSAGE);
+						// Pausar lösaren 
 							sMatrix[row][col].requestFocus(); 
 							sMatrix[row][col].selectAll();  
 							return false;
@@ -262,11 +263,11 @@ public class Grid {
 			for (int c = 0; c < 9; c++) {
 				if (((r >= 0) && (r <= 2)) || ((r >= 6) && (r <= 8))) {
 					if (((c >= 0) && (c <= 2)) || ((c >= 6) && (c <= 8))) {
-						sMatrix[r][c].setBackground(Color.ORANGE);
+						sMatrix[r][c].setBackground(Color.RED);
 					} 
 				} else {
 					if ((c >= 3) && (c <= 5)) {
-						sMatrix[r][c].setBackground(Color.ORANGE);
+						sMatrix[r][c].setBackground(Color.RED);
 					}
 				}
 			}
